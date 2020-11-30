@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, make_response
 import MySQLdb
 import time
 import projet_si
-import sys
+
 
 '''
     Flask: web app
@@ -37,11 +37,9 @@ def dump():
 def get_current_time():
     return jsonify(time.time())
 
-@app.route('/task/id', methods=['GET', 'POST'])
-def id():
+@app.route('/task/<int:post_id>', methods=['GET', 'POST'])
+def id(post_id):
     try:
-        #val = request.form.get('value')
-        val = 1
         con, cur = connection()
         cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {val}")
         con.commit()
