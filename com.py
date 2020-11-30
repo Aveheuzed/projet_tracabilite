@@ -37,7 +37,7 @@ def dump():
 def get_current_time():
     return jsonify(time.time())
 
-@app.route('/task/<int:post_id>', methods=['GET', 'POST'])
+@app.route('/entity/<int:post_id>', methods=['GET', 'POST'])
 def id(post_id):
     try:
         val = post_id
@@ -46,7 +46,7 @@ def id(post_id):
         con.commit()
         data = cur.fetchall()
         cur.close()
-        return jsonify(data)
+        return data
     except:
         return 'failure'
 
