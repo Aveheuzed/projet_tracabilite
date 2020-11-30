@@ -37,12 +37,23 @@ def dump():
 def get_current_time():
     return jsonify(time.time())
 
-@app.route('/entity/<int:post_id>', methods=['GET', 'POST'])
-def id(post_id):
+@app.route('/entity/<int:id>', methods=['GET', 'POST'])
+def entity_id(id):
     try:
-        val = post_id
         con, cur = connection()
         cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {val}")
+        con.commit()
+        data = cur.fetchall()
+        cur.close()
+        return jsonify(data)
+    except:
+        return 'failure'
+
+@app.route('<string:id_hash>', methods=['GET', 'POST'])
+def hash_id(id_hash):
+    try:
+        con, cur = connection()
+        cur.execute("SELECT * FROM hashs")
         con.commit()
         data = cur.fetchall()
         cur.close()
