@@ -1,4 +1,4 @@
-Flask
+flask
 jsonify
 flask_mysqldb
 make_response
