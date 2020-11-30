@@ -43,7 +43,7 @@ def id():
         #val = request.form.get('value')
         val = 1
         con, cur = connection()
-        cur.execute("SELECT * FROM entities WHERE id_entity LIKE %s",val)
+        cur.execute("SELECT * FROM entities WHERE id_entity = %s",val)
         con.commit()
         data = cur.fetchall()
         cur.close()
