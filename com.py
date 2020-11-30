@@ -13,12 +13,13 @@ import sys
 app = Flask(__name__)
 
 
-
-conn = MySQLdb.connect(host="localhost",
-                           user = "phpmyadmin",
-                           passwd = "foo",
-                           db = "block_track")
-c = conn.cursor()
+def connection():
+    conn = MySQLdb.connect(host="localhost",
+                            user = "phpmyadmin",
+                            passwd = "foo",
+                            db = "block_track")
+    c = conn.cursor()
+    return conn,c
 
 ''' 
     mysql.connection.cursor()
@@ -36,9 +37,9 @@ def index():
 
 @app.route('/dump')
 def dump():
-    cur = mysql.connection.cursor()
+    con, cur = connection()
     cur.execute("SELECT * FROM entities")
-    mysql.connection.commit()
+    con.commit()
     data = cur.fetchall()
     cur.close()
     print(data)
