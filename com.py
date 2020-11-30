@@ -41,7 +41,7 @@ def get_current_time():
 def entity_id(id):
     try:
         con, cur = connection()
-        cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {val}")
+        cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {id}")
         con.commit()
         data = cur.fetchall()
         cur.close()
