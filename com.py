@@ -12,7 +12,6 @@ import sys
 
 app = Flask(__name__)
 
-
 def connection():
     conn = MySQLdb.connect(host="localhost",
                             user = "phpmyadmin",
@@ -20,16 +19,6 @@ def connection():
                             db = "block_track")
     c = conn.cursor()
     return conn,c
-
-''' 
-    mysql.connection.cursor()
-        .execute(query)
-        .close()
-        .fetchall()
-        .fetchmany(size=1)
-    mysql.connection.commit()
-
-'''
 
 @app.route('/', methods=['POST','GET'])
 def index():
@@ -42,27 +31,23 @@ def dump():
     con.commit()
     data = cur.fetchall()
     cur.close()
-    print(data)
     return jsonify(data)
 
 @app.route('/time')
 def get_current_time():
     return jsonify(time.time())
 
-@app.route('/task/add', methods=['GET', 'POST'])
-def add():
-    ''' 
-        Get input details
-        if info in form
-            -> d = request.form
-               data = d['key']
-    ''' 
+@app.route('/task/id', methods=['GET', 'POST'])
+def id():
     try:
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO  VALUES ",)
-        mysql.connection.commit()
+        #val = request.form.get('value')
+        val = 1
+        con, cur = connection()
+        cur.execute("SELECT * FROM entities WHERE id LIKE %s",val)
+        con.commit()
+        data = cur.fetchall()
         cur.close()
-        return 'success'
+        return jsonify(data)
     except:
         return 'failure'
 
