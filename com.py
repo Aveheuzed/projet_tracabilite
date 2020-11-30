@@ -46,7 +46,7 @@ def id(post_id):
         con.commit()
         data = cur.fetchall()
         cur.close()
-        return data
+        return jsonify(data)
     except:
         return 'failure'
 
