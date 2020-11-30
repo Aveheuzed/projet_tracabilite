@@ -43,7 +43,7 @@ def id():
         #val = request.form.get('value')
         val = 1
         con, cur = connection()
-        cur.execute("SELECT * FROM entities WHERE id_entity = %s",val)
+        cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {val}")
         con.commit()
         data = cur.fetchall()
         cur.close()
