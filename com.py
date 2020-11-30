@@ -23,7 +23,7 @@ mysql = MySQL(app)
         .fetchall()
         .fetchmany(size=1)
     mysql.connection.commit()
-
+    
 '''
 
 @app.route('/', methods=['POST','GET'])
