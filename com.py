@@ -33,7 +33,7 @@ def index():
 
 @app.route('/time')
 def get_current_time():
-    rertun {'time' :time.time()}
+    rertun jsonify(time.time())
 
 @app.route('/task/add', methods=['GET', 'POST'])
 def add():
