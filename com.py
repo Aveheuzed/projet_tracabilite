@@ -46,7 +46,6 @@ def id(post_id):
         con.commit()
         data = cur.fetchall()
         cur.close()
-        print(data)
         return data
     except:
         return 'failure'
