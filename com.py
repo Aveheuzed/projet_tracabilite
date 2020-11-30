@@ -11,7 +11,7 @@ import projet_si
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = '51.38.133.33:3306'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'phpmyadmin'
 app.config['MYSQL_PASSWORD'] = 'foo'
 app.config['MYSQL_DB'] = 'block_track'
