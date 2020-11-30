@@ -1,9 +1,6 @@
 Flask
-flask-sqlalchemy
 jsonify
+flask_mysqldb
 make_response
-SQLAlchemy
-marshmallow_sqlalchemy
-marshmallow
 request
 rsa
