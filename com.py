@@ -11,10 +11,10 @@ import projet_si
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = '51.38.133.33:3306'
 app.config['MYSQL_USER'] = 'phpmyadmin'
 app.config['MYSQL_PASSWORD'] = 'foo'
-app.config['MYSQL_DB'] = 'MyDB'
+app.config['MYSQL_DB'] = 'block_track'
 
 mysql = MySQL(app)
 
@@ -31,6 +31,15 @@ mysql = MySQL(app)
 @app.route('/', methods=['POST','GET'])
 def index():
     return 200
+
+@app.route('/dump')
+def dump():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM entities")
+    mysql.connection.commit()
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data)
 
 @app.route('/time')
 def get_current_time():
