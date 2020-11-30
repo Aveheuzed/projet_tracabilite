@@ -39,6 +39,22 @@ def index():
 def get_current_time():
     rertun {'time' :time.time()}
 
+@app.route('/task/add', methods=['GET', 'POST'])
+def add():
+    ''' 
+        Get input details
+        if info in form
+            -> d = request.form
+               data = d['key']
+    ''' 
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO  VALUES ",)
+        mysql.connection.commit()
+        cur.close()
+        return 'success'
+    except:
+        return 'failure'
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
