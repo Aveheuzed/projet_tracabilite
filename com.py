@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, make_response
-from flask_mysqldb import MySQL
+import MySQLdb
 import time
 import projet_si
 import sys
@@ -12,12 +12,13 @@ import sys
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'phpmyadmin'
-app.config['MYSQL_PASSWORD'] = 'foo'
-app.config['MYSQL_DB'] = 'block_track'
 
-mysql = MySQL(app)
+
+conn = MySQLdb.connect(host="localhost",
+                           user = "phpmyadmin",
+                           passwd = "foo",
+                           db = "block_track")
+c = conn.cursor()
 
 ''' 
     mysql.connection.cursor()
@@ -33,7 +34,7 @@ mysql = MySQL(app)
 def index():
     return 200
 
-#@app.route('/dump')
+@app.route('/dump')
 def dump():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM entities")
@@ -42,7 +43,7 @@ def dump():
     cur.close()
     print(data)
     return jsonify(data)
-dump()
+
 @app.route('/time')
 def get_current_time():
     return jsonify(time.time())
