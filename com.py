@@ -3,15 +3,8 @@ import MySQLdb
 import time
 import projet_si
 
-
-'''
-    Flask: web app
-    request: requests
-    jsonify: JSON output -> response obj with mime type of app
-'''
-
 app = Flask(__name__)
-
+CORS(app)
 def connection():
     conn = MySQLdb.connect(host="localhost",
                             user = "phpmyadmin",
@@ -48,12 +41,12 @@ def entity_id(id):
         return jsonify(data)
     except:
         return 'failure'
-        
+
 @app.route('/hash/<string:id_hash>', methods=['GET', 'POST'])
 def hash_id(id_hash):
     try:
         con, cur = connection()
-        cur.execute("SELECT * FROM hashs")
+        cur.execute("SELECT * FROM hashs WHERE `id_hash` = {id_hash}")
         con.commit()
         data = cur.fetchall()
         cur.close()
