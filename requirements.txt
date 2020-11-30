@@ -1,3 +1,9 @@
 Flask
+flask-sqlalchemy
+jsonify
+make_response
+SQLAlchemy
+marshmallow_sqlalchemy
+marshmallow
 request
 rsa
