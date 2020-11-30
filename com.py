@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from flask_mysqldb import MySQL
 import time
 import projet_si
+import sys
 
 '''
     Flask: web app
@@ -17,7 +18,7 @@ app.config['MYSQL_PASSWORD'] = 'foo'
 app.config['MYSQL_DB'] = 'block_track'
 
 mysql = MySQL(app)
-
+dump()
 ''' 
     mysql.connection.cursor()
         .execute(query)
@@ -39,6 +40,7 @@ def dump():
     mysql.connection.commit()
     data = cur.fetchall()
     cur.close()
+    print(data)
     return jsonify(data)
 
 @app.route('/time')
