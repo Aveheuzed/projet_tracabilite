@@ -17,9 +17,11 @@ app.config['MYSQL_DB'] = 'MyDB'
 mysql = MySQL(app)
 
 ''' 
-     mysql.connection.cursor()
+    mysql.connection.cursor()
         .execute(query)
         .close()
+        .fetchall()
+        .fetchmany(size=1)
     mysql.connection.commit()
 
 '''
