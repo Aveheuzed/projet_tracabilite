@@ -29,10 +29,6 @@ mysql = MySQL(app)
 
 @app.route('/', methods=['POST','GET'])
 def index():
-    if request.method = "POST":
-        return "POST"
-    else:
-        return "GET"
     return 200
 
 @app.route('/time')
