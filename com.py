@@ -40,6 +40,7 @@ def get_current_time():
 @app.route('/task/<int:post_id>', methods=['GET', 'POST'])
 def id(post_id):
     try:
+        val = post_id
         con, cur = connection()
         cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {val}")
         con.commit()
