@@ -4,3 +4,4 @@ flask_mysqldb
 make_response
 requests
 rsa
+mysqlclient
