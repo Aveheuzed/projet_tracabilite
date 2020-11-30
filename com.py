@@ -49,17 +49,6 @@ def entity_id(id):
     except:
         return 'failure'
 
-@app.route('/hash/<string:id_hash>', methods=['GET', 'POST'])
-def hash_id(id_hash):
-    try:
-        con, cur = connection()
-        cur.execute("SELECT * FROM hashs")
-        con.commit()
-        data = cur.fetchall()
-        cur.close()
-        return jsonify(data)
-    except:
-        return 'failure'
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
