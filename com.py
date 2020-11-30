@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from flask_mysqldb import MySQL
+import time
 
 '''
     Flask: web app
@@ -23,7 +24,7 @@ mysql = MySQL(app)
         .fetchall()
         .fetchmany(size=1)
     mysql.connection.commit()
-    
+
 '''
 
 @app.route('/', methods=['POST','GET'])
@@ -33,6 +34,11 @@ def index():
     else:
         return "GET"
     return 200
-  
+
+@app.route('/time')
+def get_current_time():
+    rertun {'time' :time.time()}
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
