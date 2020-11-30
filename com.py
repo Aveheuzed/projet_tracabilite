@@ -1,22 +1,27 @@
 from flask import Flask, request, jsonify, make_response
-from flask_sqlalchemy import SQLAlchemy
-from marshmallow_sqlalchemy import ModelSchema
-from marshmallow import fields
+from flask_mysqldb import MySQL
 
 '''
     Flask: web app
     request: requests
     jsonify: JSON output -> response obj with mime type of app
-    SQLalchemy: access db
-    marshmallow: serialize objects
 '''
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://<mysql_username>:<mysql_password>@<mysql_host>:<mysql_port>/<mysql_db>'
-db = SQLAlchemy(app)
 
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'MyDB'
 
-@app.route('/', methods=['POST'])
+mysql = MySQL(app)
 
+''' 
+
+'''
+@app.route('/', methods=['POST','GET'])
+def index():
+    return 200
   
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
