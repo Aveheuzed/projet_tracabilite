@@ -1,7 +1,6 @@
-flask
+Flask
 jsonify
 flask_mysqldb
 make_response
-request
+requests
 rsa
-time
