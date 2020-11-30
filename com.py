@@ -49,7 +49,7 @@ def entity_id(id):
     except:
         return 'failure'
 
-@app.route('/<string:id_hash>', methods=['GET', 'POST'])
+@app.route('/hash/<string:id_hash>', methods=['GET', 'POST'])
 def hash_id(id_hash):
     try:
         con, cur = connection()
