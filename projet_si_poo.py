@@ -57,7 +57,7 @@ class Server:
 
     __userid = 0
 
-    __slots__ = ("pubkeys", "_privkeys", "hashes", "bonds")
+    __slots__ = ("pubkeys", "_privkeys", "hashes")
 
     def __new__(cls):
         # singleton
@@ -70,7 +70,6 @@ class Server:
 
             instance.pubkeys = dict() # user_id : pubkey
             instance.hashes = set() # plain hashes
-            instance.bonds = dict() # message_id : Tuple[message_ids] (enfant → parents)
 
             cls.__instance = instance
 
@@ -110,15 +109,23 @@ if __name__ == '__main__':
     Alice = s.new_user()
     Bob = s.new_user()
 
+    ## transaction
+
+    # premier message sans parent
     m1 = Message(Alice["id"], "J'ai donné 3 pommes à Bob.".encode())
-    m2 = Message(Bob["id"], "J'ai mangé les trois pommes d'Alice".encode(), m1)
+    auth1 = m1.sign() ; del m1
 
-    authentication = m2.sign()
+    # QR code pour transmettre auth1
 
-    del m1
-    del m2
+    m2 = Message(Bob["id"], "J'ai mangé les trois pommes d'Alice".encode(), Message.from_signature(**auth1))
 
-    restored = Message.from_signature(**authentication)
+    auth2 = m2.sign() ; del m2
 
-    print(restored.message.decode())
-    print(restored.oldmessages[0].message.decode())
+    # QR code pour transmettre auth2
+
+    ## récupération
+
+    restored = Message.from_signature(**auth2)
+
+    print(restored.message.decode()) # texte du dernier message
+    print(restored.oldmessages[0].message.decode()) # accès au(x) parent(s)
