@@ -126,6 +126,23 @@ if __name__ == '__main__':
     ## récupération
 
     restored = Message.from_signature(**auth2)
+    msg = pickletools.optimize(pickle.dumps(restored))
+    print(msg, len(msg))
 
     print(restored.message.decode()) # texte du dernier message
     print(restored.oldmessages[0].message.decode()) # accès au(x) parent(s)
+
+# ----------------------------------------------------------------------------------------------------------------
+#
+# API : { [BDD : id -> blob message chiffré] -> [modèle : blob message chiffré -> objet message clair] -> JSON }
+#
+#
+# BDD:
+# MESSAGES : hash | blob
+# ENTITIES : id | name | pubkey | privkey | adress | …
+#
+# /message/{hash}
+# /message/create/ [POST {{user_id}/{texte}/{parentid1}/{parentid2}/{parentid2}}]
+#
+# /entity/{id}
+# /entity/create/… [POST]
