@@ -17,18 +17,6 @@ def connection():
     
     return conn,c
 
-@app.route('/dump',methods = ['GET','POST'])
-def dump():
-    #-----------DB-CONNECTION----------------#
-    con,cur = connection()
-    cur.execute("SELECT * from `entity` WHERE `public_key` = '3'")
-    con.commit()
-    #-----------RETRIEVE-DATA----------------#
-    data = cur.fetchall()
-    cur.close()
-    #-----------RETURN-CORRESP-ID------------#
-    return jsonify(data[0])
-
 @app.route('/create',methods=['POST'])
 def createUser():
     try:
