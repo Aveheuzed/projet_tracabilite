@@ -64,7 +64,7 @@ class JsonMessageEncoder(json.JSONEncoder) :
             return super().default(obj)
         return dict(
                     user_id=obj.sender,
-                    message=obj.message.decode(),
+                    message=obj.message.decode(errors="replace"),
                     children=obj.oldmessages
                     )
 
