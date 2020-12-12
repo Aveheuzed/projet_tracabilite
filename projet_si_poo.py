@@ -2,6 +2,15 @@
 import rsa
 import pickle, pickletools
 
+def connection():
+    conn = MySQLdb.connect(host="localhost",
+                            user = "root",
+                            passwd = "",
+                            db = "block_track")
+    c = conn.cursor()
+    
+    return conn,c
+
 class Message:
 
     __slots__ = ("sender", "message", "oldmessages")
@@ -34,10 +43,15 @@ class Message:
         """Raises rsa.VerificationError if the message can't be authenticated.
         Raises KeyError (from Server.get_message) if the message can't be found."""
 
-        message = Server.get_message(hsh)
-        sender_id = message["sender_id"]
-        signature = message["signature"]
-        plaintext = message["plaintext"]
+        con, cur = connection()
+        cur.execute(f"SELECT * FROM `messages` WHERE `hsh` = {hsh}")
+        con.commit()
+        message = cur.fetchall()
+        cur.close()
+
+        sender_id = message[1]
+        signature = message[2]
+        plaintext = message[3]
         # plaintext is some yet-untrusted pickle dump; we can't load it until we've made sure it is safe
         # in general, pickle may be used for code injection, see the pickle docs for details
 
@@ -56,48 +70,26 @@ class Server:
 
     __slots__ = ()
 
-    __messages = dict()
-    __entities = dict()
-
     @classmethod
     def get_pubkey(cls, user_id:int)->rsa.PublicKey :
-        return cls.__entities.get(user_id)["pubkey"]
+        con, cur = connection()
+        cur.execute(f"SELECT public_key FROM entity WHERE `id_entity` = {user_id}")
+        data = cur.fetchall()
+        #-----------PICKLE-LOADS----------------#
+
+        cur.close()
+        return data
 
     @classmethod
     def get_privkey(cls, user_id:int)->rsa.PrivateKey :
         return cls.__entities.get(user_id)["privkey"]
 
     @classmethod
-    def register_user(cls, nom:str, adresse:str, logo:str, *, pubkey:rsa.PublicKey, privkey:rsa.PrivateKey)->int :
-        uid = len(cls.__entities)
-        cls.__entities[uid] = dict(
-                                nom=nom,
-                                adresse=adresse,
-                                logo=logo,
-                                pubkey=pubkey,
-                                privkey=privkey
-                                )
-        return uid
-
-    @classmethod
     def register_message(cls, hsh:bytes, plaintext:bytes, signature:bytes, sender_id:int)->None :
-        cls.__messages[hsh] = dict(
-                                plaintext=plaintext,
-                                signature=signature,
-                                sender_id=sender_id
-                                )
-    @classmethod
-    def get_message(cls, hsh:bytes)->dict :
-        """Raises KeyError is hash not found."""
-        return cls.__messages[hsh]
-
-
-def new_user(nom="", adresse="", logo="")->int :
-    """Generates keys and all, return the new user's id"""
-    pub, priv = rsa.newkeys(1024)
-    return Server.register_user(nom, adresse, logo, pubkey=pub, privkey=priv)
-
-
+        con, cur = connection()
+        cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ({hsh}, {plaintext}, {signature}, {sender_id})")
+        con.commit()
+        cur.close()
 
 __all__ = ("new_user", "Message")
 
