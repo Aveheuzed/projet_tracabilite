@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import rsa
 import pickle, pickletools
+import MySQLdb
+import base64
 
 def connection():
     conn = MySQLdb.connect(host="localhost",
@@ -10,6 +12,7 @@ def connection():
     c = conn.cursor()
     
     return conn,c
+
 
 class Message:
 
@@ -73,12 +76,11 @@ class Server:
     @classmethod
     def get_pubkey(cls, user_id:int)->rsa.PublicKey :
         con, cur = connection()
-        cur.execute(f"SELECT public_key FROM entity WHERE `id_entity` = {user_id}")
+        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
         data = cur.fetchall()
-        #-----------PICKLE-LOADS----------------#
-
+        pubkey =  pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
         cur.close()
-        return data
+        return pubkey
 
     @classmethod
     def get_privkey(cls, user_id:int)->rsa.PrivateKey :
@@ -94,22 +96,6 @@ class Server:
 __all__ = ("new_user", "Message")
 
 if __name__ == '__main__':
-    Alice = new_user()
-    Bob = new_user()
 
-    ## transaction
+    print(Server.get_pubkey(61))
 
-    # premier message sans parent
-    m1 = Message(Alice, "J'ai donné 3 pommes à Bob.".encode())
-    auth1 = m1.sign() ; del m1
-
-    # auth1 passe dans le monde réel :)
-
-    m2 = Message(Bob, "J'ai mangé les trois pommes d'Alice".encode(), Message.from_signature(auth1))
-    auth2 = m2.sign() ; del m2
-
-    # auth2 passe dans le monde réel :)
-    restored = Message.from_signature(auth2)
-
-    print(restored.message.decode()) # texte du dernier message
-    print(restored.oldmessages[0].message.decode()) # accès au(x) parent(s)
