@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rsa
 import pickle, pickletools
+import json
 
 class Message:
 
@@ -50,6 +51,23 @@ class Message:
 
         # only now is the message trustable
         return pickle.loads(plaintext)
+
+    def json_encode(self):
+        return JsonMessageEncoder().encode(self)
+
+
+
+class JsonMessageEncoder(json.JSONEncoder) :
+
+    def default(self, obj) :
+        if not isinstance(obj, Message) :
+            return super().default(obj)
+        return dict(
+                    user_id=obj.sender,
+                    message=obj.message.decode(),
+                    children=obj.oldmessages
+                    )
+
 
 
 class Server:
