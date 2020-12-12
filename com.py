@@ -4,6 +4,7 @@ import time
 import projet_si_poo
 import rsa
 import pickle, pickletools
+import base64
 
 app = Flask(__name__)
 
@@ -39,11 +40,13 @@ def createUser():
         #-----------GEN-KEYS--------------------#
         pubkey, privkey = rsa.newkeys(1024)
 
-        pubkey_bdd = pickletools.optimize(pickle.dumps(pubkey))
+        #-----------ENCODE-FOR-DB----------------#
+        pubkey_n = pickle.dumps(pubkey)
+        pubkey_n = base64.b64encode(pubkey_n).decode('utf-8')
 
         #-----------INSERT-IN-DB----------------#
         con, cur = connection()
-        cur.execute(f"INSERT INTO `entity` (`id_entity`, `name`, `public_key`, `description`, `address`, `logo`) VALUES (NULL, {name}, '3', {desc}, {address}, {logo})")
+        cur.execute(f"INSERT INTO `entity` (`id_entity`, `name`, `public_key`, `description`, `address`, `logo`) VALUES (NULL, {name}, '{pubkey_n}', {desc}, {address}, {logo})")
         con.commit()
         cur.close()
 
@@ -66,10 +69,9 @@ def newMessageNoParent():
     message = Message(sender_id, msg.encode())
     msghash = message.sign()
 
-@app.route('/getOldMessages',methodes=['POST'])
+@app.route('/getOldMessages',methods=['POST'])
 def getOldMessages():
     hsh = request.form.get('hash')
-
     old_messages = Message.from_signature(hsh)
     #-----------CONSTRUCT-NICE-JSON----------#
     return jsonify(old_messages)
@@ -82,6 +84,6 @@ def newMessage():
 
     message = Message(sender_id, msg.encode(), Message.from_signature(hsh))
     message_hash = message.sign()
-    
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
