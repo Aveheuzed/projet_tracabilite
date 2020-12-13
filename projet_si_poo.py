@@ -13,6 +13,13 @@ def connection():
     
     return conn,c
 
+def bytesToStr(bytesIn):
+    bytesIn = base64.b64encode(bytesIn).decode('utf-8')
+    return bytesIn
+
+def StrToBytes(strIn):
+    strIn = base64.b64decode(bytes(strIn,'utf-8'))
+    return strIn
 
 class Message:
 
@@ -45,16 +52,20 @@ class Message:
     def from_signature(hsh:bytes) :
         """Raises rsa.VerificationError if the message can't be authenticated.
         Raises KeyError (from Server.get_message) if the message can't be found."""
-
+        hsh = bytesToStr(hsh)
         con, cur = connection()
-        cur.execute(f"SELECT * FROM `messages` WHERE `hsh` = {hsh}")
+        cur.execute(f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'")
         con.commit()
-        message = cur.fetchall()
+        data = cur.fetchall()
         cur.close()
+        hsh = StrToBytes(hsh)
 
-        sender_id = message[1]
-        signature = message[2]
-        plaintext = message[3]
+        sender_id = data[0][3]
+        signature = data[0][2]
+        plaintext = data[0][1]
+
+        signature = StrToBytes(signature)
+        plaintext = StrToBytes(plaintext)
         # plaintext is some yet-untrusted pickle dump; we can't load it until we've made sure it is safe
         # in general, pickle may be used for code injection, see the pickle docs for details
 
@@ -78,18 +89,26 @@ class Server:
         con, cur = connection()
         cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
         data = cur.fetchall()
-        pubkey =  pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
+        pubkey = pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
         cur.close()
         return pubkey
 
     @classmethod
     def get_privkey(cls, user_id:int)->rsa.PrivateKey :
-        return cls.__entities.get(user_id)["privkey"]
+        con, cur = connection()
+        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
+        data = cur.fetchall()
+        privkey = pickle.loads(base64.b64decode(bytes(data[0][6], 'utf-8')))
+        cur.close()
+        return privkey
 
     @classmethod
     def register_message(cls, hsh:bytes, plaintext:bytes, signature:bytes, sender_id:int)->None :
         con, cur = connection()
-        cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ({hsh}, {plaintext}, {signature}, {sender_id})")
+        hsh = bytesToStr(hsh)
+        plaintext = bytesToStr(plaintext)
+        signature = bytesToStr(signature)
+        cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ('{hsh}', '{plaintext}', '{signature}', {sender_id})")
         con.commit()
         cur.close()
 
@@ -97,5 +116,17 @@ __all__ = ("new_user", "Message")
 
 if __name__ == '__main__':
 
-    print(Server.get_pubkey(61))
+    #print(Server.get_pubkey(62))
+    #print(Server.get_privkey(62))
 
+    message = Message(62, "Hello There".encode())
+    msghash1 = message.sign()
+    #print(Message.from_signature(msghash).message.decode())
+
+    m2 = Message(62,"Iam 3".encode(),Message.from_signature(msghash1))
+    m2hash = m2.sign()
+
+    res = Message.from_signature(m2hash)
+
+    print(res.message.decode())
+    print(res.oldmessages[0].message.decode())
