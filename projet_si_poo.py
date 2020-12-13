@@ -2,6 +2,25 @@
 import rsa
 import pickle, pickletools
 import json
+import MySQLdb
+import base64
+
+def connection():
+    conn = MySQLdb.connect(host="localhost",
+                            user = "root",
+                            passwd = "",
+                            db = "block_track")
+    c = conn.cursor()
+
+    return conn,c
+
+def bytesToStr(bytesIn):
+    bytesIn = base64.b64encode(bytesIn).decode('utf-8')
+    return bytesIn
+
+def StrToBytes(strIn):
+    strIn = base64.b64decode(bytes(strIn,'utf-8'))
+    return strIn
 
 class Message:
 
@@ -34,11 +53,20 @@ class Message:
     def from_signature(hsh:bytes) :
         """Raises rsa.VerificationError if the message can't be authenticated.
         Raises KeyError (from Server.get_message) if the message can't be found."""
+        hsh = bytesToStr(hsh)
+        con, cur = connection()
+        cur.execute(f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'")
+        con.commit()
+        data = cur.fetchall()
+        cur.close()
+        hsh = StrToBytes(hsh)
 
-        message = Server.get_message(hsh)
-        sender_id = message["sender_id"]
-        signature = message["signature"]
-        plaintext = message["plaintext"]
+        sender_id = data[0][3]
+        signature = data[0][2]
+        plaintext = data[0][1]
+
+        signature = StrToBytes(signature)
+        plaintext = StrToBytes(plaintext)
         # plaintext is some yet-untrusted pickle dump; we can't load it until we've made sure it is safe
         # in general, pickle may be used for code injection, see the pickle docs for details
 
@@ -74,68 +102,49 @@ class Server:
 
     __slots__ = ()
 
-    __messages = dict()
-    __entities = dict()
-
     @classmethod
     def get_pubkey(cls, user_id:int)->rsa.PublicKey :
-        return cls.__entities.get(user_id)["pubkey"]
+        con, cur = connection()
+        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
+        data = cur.fetchall()
+        pubkey = pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
+        cur.close()
+        return pubkey
 
     @classmethod
     def get_privkey(cls, user_id:int)->rsa.PrivateKey :
-        return cls.__entities.get(user_id)["privkey"]
-
-    @classmethod
-    def register_user(cls, nom:str, adresse:str, logo:str, *, pubkey:rsa.PublicKey, privkey:rsa.PrivateKey)->int :
-        uid = len(cls.__entities)
-        cls.__entities[uid] = dict(
-                                nom=nom,
-                                adresse=adresse,
-                                logo=logo,
-                                pubkey=pubkey,
-                                privkey=privkey
-                                )
-        return uid
+        con, cur = connection()
+        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
+        data = cur.fetchall()
+        privkey = pickle.loads(base64.b64decode(bytes(data[0][6], 'utf-8')))
+        cur.close()
+        return privkey
 
     @classmethod
     def register_message(cls, hsh:bytes, plaintext:bytes, signature:bytes, sender_id:int)->None :
-        cls.__messages[hsh] = dict(
-                                plaintext=plaintext,
-                                signature=signature,
-                                sender_id=sender_id
-                                )
-    @classmethod
-    def get_message(cls, hsh:bytes)->dict :
-        """Raises KeyError is hash not found."""
-        return cls.__messages[hsh]
-
-
-def new_user(nom="", adresse="", logo="")->int :
-    """Generates keys and all, return the new user's id"""
-    pub, priv = rsa.newkeys(1024)
-    return Server.register_user(nom, adresse, logo, pubkey=pub, privkey=priv)
-
-
+        con, cur = connection()
+        hsh = bytesToStr(hsh)
+        plaintext = bytesToStr(plaintext)
+        signature = bytesToStr(signature)
+        cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ('{hsh}', '{plaintext}', '{signature}', {sender_id})")
+        con.commit()
+        cur.close()
 
 __all__ = ("new_user", "Message")
 
 if __name__ == '__main__':
-    Alice = new_user()
-    Bob = new_user()
 
-    ## transaction
+    #print(Server.get_pubkey(62))
+    #print(Server.get_privkey(62))
 
-    # premier message sans parent
-    m1 = Message(Alice, "J'ai donné 3 pommes à Bob.".encode())
-    auth1 = m1.sign() ; del m1
+    message = Message(62, "Hello There".encode())
+    msghash1 = message.sign()
+    #print(Message.from_signature(msghash).message.decode())
 
-    # auth1 passe dans le monde réel :)
+    m2 = Message(62,"Iam 3".encode(),Message.from_signature(msghash1))
+    m2hash = m2.sign()
 
-    m2 = Message(Bob, "J'ai mangé les trois pommes d'Alice".encode(), Message.from_signature(auth1))
-    auth2 = m2.sign() ; del m2
+    res = Message.from_signature(m2hash)
 
-    # auth2 passe dans le monde réel :)
-    restored = Message.from_signature(auth2)
-
-    print(restored.message.decode()) # texte du dernier message
-    print(restored.oldmessages[0].message.decode()) # accès au(x) parent(s)
+    print(res.message.decode())
+    print(res.oldmessages[0].message.decode())
