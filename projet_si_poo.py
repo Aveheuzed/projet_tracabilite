@@ -32,7 +32,7 @@ class Message:
 	def __init__(self, sender_id:int, message:bytes, *parents):
 		self.sender = sender_id
 		self.message = message
-		self.oldmessages = parents ; print(local())
+		self.oldmessages = parents ; print(locals())
 
 	def __getstate__(self) :
 		return (self.sender, self.message, *(msg.sign() for msg in self.oldmessages))
@@ -53,9 +53,7 @@ class Message:
 	def from_signature(hsh:bytes) :
 		"""Raises rsa.VerificationError if the message can't be authenticated.
 		Raises KeyError (from Server.get_message) if the message can't be found."""
-		hsh = bytesToStr(hsh)
-        print("ta mère", hsh)
-        con, cur = connection()
+		hsh = bytesToStr(hsh) ; print("ta mère", hsh) ;  con, cur = connection()
 		rq = f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'" ; print("ta sœur", rq)  ; cur.execute(rq)
 		con.commit()
 		data = cur.fetchall()

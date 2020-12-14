@@ -89,8 +89,8 @@ def getOldMessages():
 def newMessage():
     try :
         sender_id = request.form.get('sender_id')
-        msg = request.form.get('message')
-        hsh = [Message.from_signature(StrToBytes(hsh)) for hsh in request.form.get('hash')]
+        msg = request.form.get('message') ; print(type(request.form.get("hash")))
+        hsh = [Message.from_signature(StrToBytes(hsh)) for hsh in eval(request.form.get('hash'))]
         print(hsh)
         message = Message(sender_id, msg.encode(), *hsh)
         message_hash = message.sign()
