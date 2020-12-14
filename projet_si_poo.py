@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-import sys
 import rsa
 import pickle, pickletools
 import json
 import MySQLdb
-import base64
 
 def connection():
 	conn = MySQLdb.connect(host="localhost",
@@ -14,14 +12,6 @@ def connection():
 	c = conn.cursor()
 
 	return conn,c
-
-def bytesToStr(bytesIn):
-	bytesIn = base64.b64encode(bytesIn).decode('utf-8')
-	return bytesIn
-
-def StrToBytes(strIn):
-	strIn = base64.b64decode(bytes(strIn,'utf-8'))
-	return strIn
 
 class Message:
 
@@ -53,19 +43,21 @@ class Message:
 	def from_signature(hsh:bytes) :
 		"""Raises rsa.VerificationError if the message can't be authenticated.
 		Raises KeyError (from Server.get_message) if the message can't be found."""
-		hsh = bytesToStr(hsh) ; print("ta mère", hsh) ;  con, cur = connection()
-		rq = f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'" ; print("ta sœur", rq)  ; cur.execute(rq)
+		hsh = hsh.hex()
+		con, cur = connection()
+		rq = f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'"
+		cur.execute(rq)
 		con.commit()
 		data = cur.fetchall()
 		cur.close()
-		hsh = StrToBytes(hsh) ;print(data, file=sys.stderr)
+		hsh = bytes.fromhex(hsh)
 
 		sender_id = data[0][2]
 		signature = data[0][1]
 		plaintext = data[0][0]
 
-		signature = StrToBytes(signature)
-		plaintext = StrToBytes(plaintext)
+		signature = bytes.fromhex(signature)
+		plaintext = bytes.fromhex(plaintext)
 		# plaintext is some yet-untrusted pickle dump; we can't load it until we've made sure it is safe
 		# in general, pickle may be used for code injection, see the pickle docs for details
 
@@ -95,8 +87,6 @@ class JsonMessageEncoder(json.JSONEncoder) :
 					children=obj.oldmessages
 					)
 
-
-
 class Server:
 
 	__slots__ = ()
@@ -106,7 +96,7 @@ class Server:
 		con, cur = connection()
 		cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {user_id}")
 		data = cur.fetchall()
-		pubkey = pickle.loads(base64.b64decode(bytes(data[0][2], 'utf-8')))
+		pubkey = pickle.loads(bytes.fromhex(data[0][2]))
 		cur.close()
 		return pubkey
 
@@ -115,29 +105,24 @@ class Server:
 		con, cur = connection()
 		cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {user_id}")
 		data = cur.fetchall()
-		privkey = pickle.loads(base64.b64decode(bytes(data[0][6], 'utf-8')))
+		privkey = pickle.loads(bytes.fromhex(data[0][6]))
 		cur.close()
 		return privkey
 
 	@classmethod
 	def register_message(cls, hsh:bytes, plaintext:bytes, signature:bytes, sender_id:int)->None :
 		con, cur = connection()
-		hsh = bytesToStr(hsh)
-		plaintext = bytesToStr(plaintext)
-		signature = bytesToStr(signature)
+		hsh = hsh.hex()
+		plaintext = plaintext.hex()
+		signature = signature.hex()
 		cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ('{hsh}', '{plaintext}', '{signature}', {sender_id})")
 		con.commit()
 		cur.close()
 
 
 if __name__ == '__main__':
-
-	#print(Server.get_pubkey(62))
-	#print(Server.get_privkey(62))
-
 	message = Message(62, "Hello There".encode())
 	msghash1 = message.sign()
-	#print(Message.from_signature(msghash).message.decode())
 
 	m2 = Message(62,"Iam 3".encode(),Message.from_signature(msghash1))
 	m2hash = m2.sign()
