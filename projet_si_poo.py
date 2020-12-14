@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import rsa
 import pickle, pickletools
 import json
@@ -29,10 +30,9 @@ class Message:
 	HASHMETHOD = 'SHA-512'
 
 	def __init__(self, sender_id:int, message:bytes, *parents):
-
 		self.sender = sender_id
 		self.message = message
-		self.oldmessages = parents
+		self.oldmessages = parents ; print(local())
 
 	def __getstate__(self) :
 		return (self.sender, self.message, *(msg.sign() for msg in self.oldmessages))
@@ -54,16 +54,17 @@ class Message:
 		"""Raises rsa.VerificationError if the message can't be authenticated.
 		Raises KeyError (from Server.get_message) if the message can't be found."""
 		hsh = bytesToStr(hsh)
-		con, cur = connection()
-		cur.execute(f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'")
+                print("ta mère", hsh)
+                con, cur = connection()
+		rq = f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'" ; print("ta sœur", rq)  ; cur.execute(rq)
 		con.commit()
 		data = cur.fetchall()
 		cur.close()
-		hsh = StrToBytes(hsh)
+		hsh = StrToBytes(hsh) ;print(data, file=sys.stderr)
 
-		sender_id = data[0][3]
-		signature = data[0][2]
-		plaintext = data[0][1]
+		sender_id = data[0][2]
+		signature = data[0][1]
+		plaintext = data[0][0]
 
 		signature = StrToBytes(signature)
 		plaintext = StrToBytes(plaintext)
@@ -107,7 +108,7 @@ class Server:
 		con, cur = connection()
 		cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {user_id}")
 		data = cur.fetchall()
-		pubkey = pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
+		pubkey = pickle.loads(base64.b64decode(bytes(data[0][2], 'utf-8')))
 		cur.close()
 		return pubkey
 

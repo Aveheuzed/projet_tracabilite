@@ -1,3 +1,4 @@
+import sys
 from flask import Flask, request, jsonify, make_response
 import MySQLdb
 import time
@@ -5,6 +6,18 @@ from projet_si_poo import *
 import rsa
 import pickle, pickletools
 import base64
+
+from flask_cors import CORS
+
+
+def bytesToStr(bytesIn):
+        bytesIn = base64.b64encode(bytesIn).decode('utf-8')
+        return bytesIn
+
+def StrToBytes(strIn):
+        strIn = base64.b64decode(bytes(strIn,'utf-8'))
+        return strIn
+
 
 app = Flask(__name__)
 CORS(app)
@@ -30,11 +43,10 @@ def createUser():
 
         #-----------ENCODE-FOR-DB----------------#
         pubkey_n = pickle.dumps(pubkey)
-        pubkey_n = base64.b64encode(pubkey_n).decode('utf-8')
-
+        pubkey_n = base64.b64encode(pubkey_n).decode('utf-8') ; privkey_n = pickle.dumps(privkey) ; privkey_n = base64.b64encode(privkey_n).decode('utf-8')
         #-----------INSERT-IN-DB----------------#
         con, cur = connection()
-        cur.execute(f"INSERT INTO `entities` (`name`, `public_key`, `description`, `address`, `logo`) VALUES ('{name}', '{pubkey_n}', '{desc}', '{address}', '{logo}')")
+        cur.execute(f"INSERT INTO `entities` (`name`, `public_key`, `private_key`,`description`, `address`, `logo`) VALUES ('{name}', '{pubkey_n}', '{privkey_n}','{desc}', '{address}', '{logo}')")
         con.commit()
         cur.close()
 
@@ -54,10 +66,9 @@ def newMessageNoParent():
         #-----------POST-FORM-------------------#
         sender_id = request.form.get('sender_id')
         msg = request.form.get('message')
-
         message = Message(sender_id, msg.encode())
         msghash = message.sign()
-	return jsonify(msghash)
+        return jsonify(bytesToStr(msghash))
     except Exception as e:
         return repr(e) #'failure'
 
@@ -66,10 +77,12 @@ def newMessageNoParent():
 def getOldMessages():
     try :
         hsh = request.form.get('hash')
+        hsh = StrToBytes(hsh)
         old_messages = Message.from_signature(hsh)
         #-----------CONSTRUCT-NICE-JSON----------#
-        return jsonify(old_messages.json_encode())
+        return old_messages.json_encode()
     except Exception as e:
+        raise e
         return repr(e) #'failure'
 
 @app.route('/new_message/', methods=['POST'])
@@ -77,11 +90,13 @@ def newMessage():
     try :
         sender_id = request.form.get('sender_id')
         msg = request.form.get('message')
-        hsh = request.form.get('hash')
-    
-        message = Message(sender_id, msg.encode(), Message.from_signature(hsh))
+        hsh = [Message.from_signature(StrToBytes(hsh)) for hsh in request.form.get('hash')]
+        print(hsh)
+        message = Message(sender_id, msg.encode(), *hsh)
         message_hash = message.sign()
+        return jsonify(bytesToStr(message_hash))
     except Exception as e:
+        raise e
         return repr(e) #'failure'
 
 if __name__ == "__main__":
