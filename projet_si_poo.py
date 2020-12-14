@@ -54,8 +54,8 @@ class Message:
 		"""Raises rsa.VerificationError if the message can't be authenticated.
 		Raises KeyError (from Server.get_message) if the message can't be found."""
 		hsh = bytesToStr(hsh)
-                print("ta mère", hsh)
-                con, cur = connection()
+        print("ta mère", hsh)
+        con, cur = connection()
 		rq = f"SELECT * FROM `messages` WHERE `hsh` = '{hsh}'" ; print("ta sœur", rq)  ; cur.execute(rq)
 		con.commit()
 		data = cur.fetchall()
