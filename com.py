@@ -99,5 +99,14 @@ def newMessage():
         raise e
         return repr(e) #'failure'
 
+@app.route('/entity/<int:id>', methods=["GET", "POST"])
+def get(id):
+    con, cur = connection()
+    cur.execute(f"SELECT id_entity, name, public_key, description, address, logo FROM `entities` WHERE `id_entity` = {id}")
+    con.commit()
+    data = cur.fetchall()
+    cur.close()
+    return jsonify(data)
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
