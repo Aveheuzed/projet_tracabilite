@@ -10,11 +10,11 @@ app = Flask(__name__)
 
 def connection():
     conn = MySQLdb.connect(host="localhost",
-                            user = "root",
-                            passwd = "",
+                            user = "phpmyadmin",
+                            passwd = "foo",
                             db = "block_track")
     c = conn.cursor()
-    
+
     return conn,c
 
 @app.route('/create',methods=['POST'])
