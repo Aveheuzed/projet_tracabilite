@@ -7,8 +7,8 @@ import base64
 
 def connection():
     conn = MySQLdb.connect(host="localhost",
-                            user = "root",
-                            passwd = "",
+                            user = "phpmyadmin",
+                            passwd = "foo",
                             db = "block_track")
     c = conn.cursor()
 
@@ -105,7 +105,7 @@ class Server:
     @classmethod
     def get_pubkey(cls, user_id:int)->rsa.PublicKey :
         con, cur = connection()
-        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
+        cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {user_id}")
         data = cur.fetchall()
         pubkey = pickle.loads(base64.b64decode(bytes(data[0][5], 'utf-8')))
         cur.close()
@@ -114,7 +114,7 @@ class Server:
     @classmethod
     def get_privkey(cls, user_id:int)->rsa.PrivateKey :
         con, cur = connection()
-        cur.execute(f"SELECT * FROM entity WHERE `id_entity` = {user_id}")
+        cur.execute(f"SELECT * FROM entities WHERE `id_entity` = {user_id}")
         data = cur.fetchall()
         privkey = pickle.loads(base64.b64decode(bytes(data[0][6], 'utf-8')))
         cur.close()
@@ -130,7 +130,6 @@ class Server:
         con.commit()
         cur.close()
 
-__all__ = ("new_user", "Message")
 
 if __name__ == '__main__':
 
