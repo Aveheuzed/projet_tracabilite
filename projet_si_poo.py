@@ -115,9 +115,12 @@ class Server:
 		hsh = hsh.hex()
 		plaintext = plaintext.hex()
 		signature = signature.hex()
-		cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ('{hsh}', '{plaintext}', '{signature}', {sender_id})")
-		con.commit()
-		cur.close()
+		try :
+			cur.execute(f"INSERT INTO `messages` (`hsh`, `plaintext`, `signature`, `sender_id`) VALUES ('{hsh}', '{plaintext}', '{signature}', {sender_id})")
+			con.commit()
+			cur.close()
+		except : # duplicate message ; ignore error
+			pass
 
 
 if __name__ == '__main__':
