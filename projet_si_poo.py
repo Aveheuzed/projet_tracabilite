@@ -15,6 +15,10 @@ def connection():
 
 class Message:
 
+	"""Restore an old message with .from_signature().
+	Create a new Message with the constructor; parents my be specified in any number.
+	Commit a new Message to database and get its hash with .sign()."""
+
 	__slots__ = ("sender", "message", "oldmessages")
 
 	HASHMETHOD = 'SHA-512'
@@ -88,6 +92,8 @@ class JsonMessageEncoder(json.JSONEncoder) :
 					)
 
 class Server:
+
+	"""Container for all DB connections."""
 
 	__slots__ = ()
 

@@ -21,6 +21,13 @@ def connection():
 
     return conn,c
 
+"""API endpoints :
+/create : create a new user=entity, returns its ID
+/new_message/noparent : create a new message without parents, returns its hash
+/getOldMessages : returns a JSON representation of an existing message, including its parents
+/new_message/ : creates a new message with parents, passed as a POST array; returns the new message's hash
+/entity/<int:id> : returns public details about an entity (user) in JSON"""
+
 @app.route('/create',methods=['POST'])
 def createUser():
     #-----------POST-FORM-------------------#
